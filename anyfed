@@ -24,7 +24,7 @@ echo
 echo "Checking for curl or wget and tar..."
 
 type curl >/dev/null 2>&1 && { DLTOOL="curl"; FEDARGS="-L -O"; PROOTARGS="-L -o"; }|| { echo >&2 "curl not found"; }
-#type wget >/dev/null 2>&1 && { DLTOOL="wget"; FEDARGS=""; PROOTARGS="-O"; }|| { echo >&2 "wget not found"; }
+type wget >/dev/null 2>&1 && { DLTOOL="wget"; FEDARGS=""; PROOTARGS="-O"; }|| { echo >&2 "wget not found"; }
 type tar >/dev/null 2>&1 || { echo >&2 "I require tar but it's not installed.  Aborting."; exit 1; }
 
 [ ! -z $DLTOOL ] && { echo "Using ${DLTOOL}... All good!"; } || { echo >&2 "I require curl or wget but they are nowhere to be found.  Aborting"; exit 1; }
