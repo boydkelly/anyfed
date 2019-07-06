@@ -21,12 +21,13 @@ echo "======================================"
 echo
 
 # ensure we have wget and tar
-echo "Checking for tar and wget..."
+echo "Checking for curl or wget and tar..."
 
-type wget >/dev/null 2>&1 || { echo >&2 "I require wget but it's not installed.  Aborting."; exit 1; }
+type curl >/dev/null 2>&1 && { DLTOOL="curl"; FEDARGS="-L -O"; PROOTARGS="-L -o"; }|| { echo >&2 "curl not found"; }
+#type wget >/dev/null 2>&1 && { DLTOOL="wget"; FEDARGS=""; PROOTARGS="-O"; }|| { echo >&2 "wget not found"; }
 type tar >/dev/null 2>&1 || { echo >&2 "I require tar but it's not installed.  Aborting."; exit 1; }
 
-echo "All good!"
+[ ! -z $DLTOOL ] && { echo "Using ${DLTOOL}... All good!"; } || { echo >&2 "I require curl or wget but they are nowhere to be found.  Aborting"; exit 1; }
 
 # get arch
 echo "Which architecture you need? (armhfp, aarch64, [x86_64])"
@@ -39,11 +40,11 @@ fi
 echo "Using $ARCH Docker image:"
 
 # set MIRROR for ARCH
-
-MIRROR="https://dl.fedoraproject.org/pub/fedora/linux/releases/28/Container/$ARCH/images/Fedora-Container-Base-28-1.1.$ARCH.tar.xz"
+MIRROR="https://dl.fedoraproject.org/pub/fedora/linux/releases/30/Container/x86_64/images/Fedora-Container-Base-30-1.2.x86_64.tar.xz"
+#MIRROR="https://dl.fedoraproject.org/pub/fedora/linux/releases/30/Container/$ARCH/images/Fedora-Container-Base-30-1.2.$ARCH.tar.xz"
 
 if [ "$ARCH" = "armhfp" ]; then
-    MIRROR="https://dl.fedoraproject.org/pub/fedora/linux/releases/28/Container/$ARCH/images/Fedora-Container-Minimal-Base-28-1.1.$ARCH.tar.xz"
+    MIRROR="https://dl.fedoraproject.org/pub/fedora/linux/releases/30/Container/$ARCH/images/Fedora-Container-Minimal-Base-30-1.2.$ARCH.tar.xz"
 fi
 
 # create structure for rootfs
@@ -82,7 +83,8 @@ chmod +x "$ANYFEDPATH/anyfed"
 
     echo "Download started..."
 
-    wget "$MIRROR"
+		#echo  "$DLTOOL" "$MIRROR" "$FEDARGS" 
+		eval "$DLTOOL" "$MIRROR" "$FEDARGS" 
 
     echo "Download finished!"
 
@@ -123,7 +125,7 @@ if [ "$HASROOT" = "Y" ]; then
 
 cat > "$ANYFEDPATH/anyfed" <<- EOM
     #!$(which sh)
-    echo "Entering anyfed Fedora 28 chroot..."
+    echo "Entering anyfed Fedora chroot..."
 
     mount -t proc proc "$ANYFEDPATH/rootfs/proc"
     mount -t sysfs sys "$ANYFEDPATH/rootfs/sys/"
@@ -135,7 +137,7 @@ cat > "$ANYFEDPATH/anyfed" <<- EOM
         PATH=/bin:/usr/bin:/sbin:/usr/sbin:/bin \
         /bin/bash --login
 
-    echo "Exiting anyfed Fedora 28 chroot..."
+    echo "Exiting anyfed Fedora chroot..."
     umount "$ANYFEDPATH/rootfs/dev/pts"
     umount "$ANYFEDPATH/rootfs/dev"
     umount "$ANYFEDPATH/rootfs/sys/"
@@ -149,7 +151,9 @@ else
     if [ "$ARCH" = "x86_64" ]; then
         PROOT_MIRROR="https://github.com/proot-me/proot-static-build/releases/download/v5.1.1/proot_5.1.1_x86_64_rc2"
         PROOTPATH="$ANYFEDPATH/proot"
-        wget "$PROOT_MIRROR" -O "$ANYFEDPATH/proot" 
+				#cd "$ANYFEDPATH"
+        echo "$DLTOOL" "$PROOT_MIRROR" "$PROOTARGS" "$ANYFEDPATH/proot" 
+        eval "$DLTOOL" "$PROOT_MIRROR" "$PROOTARGS" "$ANYFEDPATH/proot" 
         chmod +x "$ANYFEDPATH/proot"
     else
         PROOT_MIRROR="https://github.com/proot-me/proot-static-build/raw/master/static/proot-arm"
